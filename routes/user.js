@@ -43,6 +43,13 @@ route.post('/register', async function (req, res) {
             error : "Email sudah terdaftar!"
         })
     }else {
+        if(email == null || pass == null || nama == null){
+            conn.release();
+            return res.status(404).json({
+                status : 404,
+                error : "Masukan inputan dengan benar"
+            })
+        }
         let q = await db.executeQuery(conn, `
             INSERT INTO user VALUES ('${email}', '${pass}', '${nama}','N', '${api}')
         `);
@@ -57,6 +64,30 @@ route.post('/register', async function (req, res) {
             status : 201,
             message : "Berhasil Register",
             result : hasil
+        });
+    }
+});
+route.post('/login', async function (req, res) {
+    let email = req.body.email;
+    let pass = req.body.password;
+
+    let api = genAPIKey(10);
+    
+    let conn = await db.getConn();
+    let check = await db.executeQuery(conn, `
+        SELECT * FROM user WHERE email='${email}' and password = '${pass}'
+    `);
+
+    if(check.length > 0){
+        conn.release();
+        return res.status(200).json({
+            status : 200,
+            message : "Api Key anda = "+ check[0].api_key
+        })
+    }else {
+        return res.status(404).json({
+            status : 404,
+            message : "Email / Password salah"
         });
     }
 });
