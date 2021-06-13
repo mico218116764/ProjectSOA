@@ -5,7 +5,8 @@ const sqlConnection= require('express-myconnection');
 const app = exp();
 const lRoute = {
     user : require('./routes/user'),
-    book : require('./routes/book'),
+    recipe : require('./routes/recipe'),
+    diet : require('./routes/diet'),
 };
 
 app.use(exp.urlencoded({ extended: true }));
@@ -15,11 +16,12 @@ app.use(sqlConnection(mysql, {
     user: 'root',
     password: '',
     port: 3306,
-    database: 't6_6741'
+    database: 'project_soa_diet'
 }, 'pool'));
 
-app.use('/api/users', lRoute.user);
-app.use('/api/books', lRoute.book);
+app.use('/api/user', lRoute.user);
+app.use('/api/recipe', lRoute.recipe);
+app.use('/api/diet', lRoute.diet);
 
 app.listen(3000, function() {console.log('Love You 3000')});
 

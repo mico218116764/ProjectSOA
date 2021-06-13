@@ -44,7 +44,7 @@ route.post('/register', async function (req, res) {
         })
     }else {
         let q = await db.executeQuery(conn, `
-            INSERT INTO user VALUES ('${email}', '${pass}', '${nama}','N' '${api}')
+            INSERT INTO user VALUES ('${email}', '${pass}', '${nama}','N', '${api}')
         `);
 
         const hasil = {

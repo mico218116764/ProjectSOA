@@ -4,7 +4,7 @@ const pool= mysql.createPool({
     host: 'localhost',
     user: 'root',
     password: '',
-    database: 't6_6741'
+    database: 'project_soa_diet'
 });
 
 const getConn= () => {
