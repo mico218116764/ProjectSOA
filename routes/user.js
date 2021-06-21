@@ -1,5 +1,6 @@
 const exp= require('express');
 const db = require('../database');
+const jwt = require("jsonwebtoken");
 
 const route = exp.Router();
 
@@ -67,10 +68,11 @@ route.post('/register', async function (req, res) {
         });
     }
 });
-route.post('/login', async function (req, res) {
+
+route.get('/login', async function (req, res) {
     let email = req.body.email;
     let pass = req.body.password;
-
+    let epas = 'admin';
     let api = genAPIKey(10);
     
     let conn = await db.getConn();
@@ -84,12 +86,27 @@ route.post('/login', async function (req, res) {
             status : 200,
             message : "Api Key anda = "+ check[0].api_key
         })
-    }else {
+    }else if(email == epas && pass == epas){
+        const date = new Date();
+        let tgl = date.toISOString().substr(0, 4) + "/" + date.toISOString().substr(5, 2) + "/" + date.toDateString().substr(8, 2) + date.toString().substr(15, 9);
+        
+        let token = jwt.sign(
+            {
+                "login_time" : tgl,
+            },
+            "minadmin",{expiresIn:'1H'}
+        );
+
+        return res.status(200).send({"token":token});
+    }
+    else {
         return res.status(404).json({
             status : 404,
             message : "Email / Password salah"
         });
     }
 });
+
+
 
 module.exports = route;
