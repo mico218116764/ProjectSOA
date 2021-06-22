@@ -39,7 +39,7 @@ route.put('/update', async function (req, res) {
     if(email == 'null'){
         res.status(400).send({msg:"Harap isi email dengan benar"})
     }else if(select[0] == null){
-        res.status(405).send({msg:"Email tidak ada"})
+        res.status(404).send({msg:"Email tidak ada"})
     }
     let update = await db.executeQuery(conn,`UPDATE user SET tipe = 'P' where email = '${email}'`)
     res.status(201).send({msg:"Berhasil diganti"})
