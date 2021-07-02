@@ -43,9 +43,10 @@ const upload = multer({
 });
 
 
-route.get('/all', async function (req,res){
+route.get('/all/:api_key', async function (req,res){
     let conn = await db.getConn()
-    let api = req.body.api_key
+    let api = req.params.api_key
+    // return res.send(api)
     let checkAPI = await db.executeQuery(conn, `select * from user where api_key = '${api}'`)
     if(checkAPI[0] == null){
         res.status(404).send({msg:"API tidak valid"})
