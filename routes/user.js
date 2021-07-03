@@ -172,7 +172,6 @@ route.get('/login', async function (req, res) {
     let email = req.body.email;
     let pass = req.body.password;
     let epas = 'admin';
-    let api = genAPIKey(10);
     
     let conn = await db.getConn();
     let check = await db.executeQuery(conn, `
@@ -181,23 +180,21 @@ route.get('/login', async function (req, res) {
 
     if(check.length > 0){
         conn.release();
-        let date = new Date(check[0].last_paid)
-        var day = date.getDate();
-        var month = date.getMonth();
-        var year = date.getFullYear();
-        let now = new Date();
-        const diffTime = Math.abs(now - date);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-        // return res.send(diffDays+"")
-        // return res.send(check[0].last_paid)
-        if(diffDays < 34){
-            return res.status(200).json({
-                status : 200,
-                alert : "silahkan bayar langganan anda",
-                message : "Api Key anda = "+ check[0].api_key
-            })
-        }else{
-            if(check[0].tipe == "P"){
+        if(check[0].tipe == "P"){
+            let date = new Date(check[0].last_paid)
+            var day = date.getDate();
+            var month = date.getMonth();
+            var year = date.getFullYear();
+            let now = new Date();
+            const diffTime = Math.abs(now - date);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            if(diffDays > 30 && diffDays < 34){
+                return res.status(200).json({
+                    status : 200,
+                    alert : "silahkan bayar langganan anda",
+                    message : "Api Key anda = "+ check[0].api_key
+                })
+            }else if(diffDays>=34){
                 let update = await db.executeQuery(conn,`UPDATE user SET tipe = 'N', api_hit = 0 where email = '${email}'`)
                 return res.status(200).json({
                     status : 200,
@@ -205,8 +202,8 @@ route.get('/login', async function (req, res) {
                     message : "Api Key anda = "+ check[0].api_key
                 })
             }
-            
         }
+        
         return res.status(200).json({
             status : 200,
             message : "Api Key anda = "+ check[0].api_key
