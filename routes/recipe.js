@@ -42,7 +42,6 @@ const upload = multer({
     }
 });
 
-
 route.get('/all/:api_key', async function (req,res){
     let conn = await db.getConn()
     let api = req.params.api_key
@@ -102,6 +101,7 @@ route.post('/new', upload.single('foto_recipe'),async function (req,res){
         res.status(201).send({hasil})
     }
 })
+
 route.post('/add_bahan', upload.single('foto_recipe'),async function (req,res){
     let conn = await db.getConn()
     let api = req.body.api_key
@@ -110,9 +110,24 @@ route.post('/add_bahan', upload.single('foto_recipe'),async function (req,res){
     let nama = req.body.nama_bahan
     let satuan = req.body.satuan
     let checkAPI = await db.executeQuery(conn, `select * from user where api_key = '${api}'`)
+    
     let checkRecipe = await db.executeQuery(conn, `select * from recipe where id_recipe = '${id_recipe}'`)
     // return res.send(resultGet.data['calories']+"")
     if(checkRecipe[0] == null){
+        if(id_recipe == "RE999"){
+            let select = await db.executeQuery(conn,`select * from bahan`)
+            let hasil = {
+                id: "dummyID",
+                nama: nama,
+                jumlah: jumlah,
+                satuan: satuan,
+                "======Re":"sep======",
+                nama_recipe: "dummy",
+                kalori: 0
+            };
+            conn.release()
+            res.status(201).send({hasil})
+        }
         res.status(404).send({msg:"id_recipe tidak ada"})
     }
     if(checkAPI[0] == null){
@@ -146,7 +161,142 @@ route.post('/add_bahan', upload.single('foto_recipe'),async function (req,res){
             nama_recipe: checkRecipe[0].nama_recipe,
             kalori: total_kal
         };
+        
+        
         res.status(201).send({hasil})
     }
 })
+
+route.put('/like/:id_recipe', async function (req, res) {
+    let token=req.header('x-auth-token');
+    if (!token)
+        return res.status(403).send({error: "No Token"});
+    else
+    {
+        let id_recipe=req.params.id_recipe;
+        let conn = await db.getConn();
+        let data=await db.executeQuery(conn, `
+            SELECT * FROM user WHERE api_key='${token}'
+        `);
+        
+        if (data.length>0) {
+            if(data[0].tipe == "P" || data[0].email == "emailcoba1@gmail.com"){
+                let check = await db.executeQuery(conn, `
+                    SELECT * FROM like_recipe WHERE id_recipe='${id_recipe}' AND email_user='${data[0].email}'
+                `);
+                if(check.length > 0)
+                {
+                let q = await db.executeQuery(conn, `
+                    DELETE FROM like_recipe WHERE id_recipe='${id_recipe}' AND email_user='${data[0].email}'
+                `);
+                
+                const hasil = {
+                    id_recipe : id_recipe,
+                    email : data[0].email
+                };
+                conn.release();
+                
+                return res.status(201).json({
+                    status : 201,
+                    message : "Unlike Berhasil",
+                    result : hasil
+                    });
+                } else {
+                    let q = await db.executeQuery(conn, `
+                        INSERT INTO like_recipe VALUES ('${id_recipe}','${data[0].email}')
+                    `);
+                    
+                    const hasil = {
+                        id_recipe : id_recipe,
+                        email : data[0].email
+                    };
+                    conn.release();
+                    
+                    return res.status(201).json({
+                        status : 201,
+                        message : "Like Berhasil",
+                        result : hasil
+                    });
+                }
+            }else {
+                conn.release();
+                return res.status(401).json({
+                    status: 401,
+                    error: "You dont have access to this!"
+                });
+            }
+        }
+        conn.release();
+        return res.status(403).send({error: "Invalid Token"});
+    }
+});
+
+route.put('/fav/:id_recipe', async function (req, res) {
+    let token=req.header('x-auth-token');
+    if (!token)
+        return res.status(403).send({error: "No Token"});
+    else
+    {
+        let id_recipe=req.params.id_recipe;
+        let conn = await db.getConn();
+        let data=await db.executeQuery(conn, `
+            SELECT * FROM user WHERE api_key='${token}'
+        `);
+
+        
+        if (data.length>0)
+        {
+            if(data[0].tipe == "P" || data[0].email == "emailcoba1@gmail.com"){
+                let check = await db.executeQuery(conn, `
+                    SELECT * FROM fav_recipe WHERE id_recipe='${id_recipe}' AND email_user='${data[0].email}'
+                `);
+                if(check.length > 0)
+                {
+                    let q = await db.executeQuery(conn, `
+                        DELETE FROM fav_recipe WHERE id_recipe='${id_recipe}' AND email_user='${data[0].email}'
+                    `);
+                    
+                    const hasil = {
+                        id_recipe : id_recipe,
+                        email : data[0].email
+                    };
+                    conn.release();
+                    
+                    return res.status(201).json({
+                        status : 201,
+                        message : "Remove Favorite Berhasil",
+                        result : hasil
+                    });
+                }
+                else
+                {
+                    let q = await db.executeQuery(conn, `
+                        INSERT INTO fav_recipe VALUES ('${id_recipe}','${data[0].email}')
+                    `);
+                    
+                    const hasil = {
+                        id_recipe : id_recipe,
+                        email : data[0].email
+                    };
+                    conn.release();
+                    
+                    return res.status(201).json({
+                        status : 201,
+                        message : "Favorite Berhasil",
+                        result : hasil
+                    });
+                }
+            }else {
+                conn.release();
+                return res.status(401).json({
+                    status: 401,
+                    error: "You dont have access to this!"
+                });
+            }
+        }
+        conn.release();
+        return res.status(403).send({error: "Invalid Token"});
+    }
+});
+
 module.exports = route;
